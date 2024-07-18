@@ -1,0 +1,41 @@
+import asyncio
+import logging
+!pip install websockets
+!pip install rsa
+!pip install flask_socketio
+import websockets
+async def handler(websocket, path):
+  data=await(websocket.recv())
+  reply=f"Data received as: data!"
+  return reply
+start_server=websockets.serve(handler, 'localhost', 13128)
+asyncio.get_event_loop().run_until_complete(start_server)
+import flask_socketio
+socket_io = flask_io.SocketIO()
+from flask import request
+@socket_io.on('connect', namespace='/ns')
+def on_client_connect():
+  if request.headers.get('Origin', 'invalid') not in socket_io.server_options.get('cors_allowed_origins', []):
+    logging.warning('WebSocket Hijacking detected from domain "%s"' % request.headers.get('Origin', 'invalid'))
+    return False
+  else:
+    return True
+async def test():
+  async with websockets.connect('https://github.com/a1897034/myrepo/blob/main/README.md') as websocket:
+    await websocket.send("Hello World!")
+    while True:
+      on_client_connect()
+      reply=await(websocket.recv())
+      return reply
+asyncio.get_event_loop().run_until_complete(test())
+import rsa
+publickey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu7KxT0kXOAw607u3wRQTi9R9bTtcQ5kd1Xw0UZsAv2tIqIZ4NtUHfYEBHS1WPtw2eyDh1ljGZt9RZ+K0h115VH4CQJBOku3LzDjxsUv59QZlJ/6cq3T5xH25H/KfZY+3yD0ti6XAPN1Ca6ZgrI4au2n1Nbh8RcpnWApYR4d12uAX5OpwF79tuklxfjydgn9P8boK7jwV2dHKK0XQpW8m4iVizx8eNQ9mv3ssjWW27hjFkZ4kBl55bvOP/kVH3JIYLMI9lRnuqcx3NSQu9YCDcHiLi0wh6nJbpXQF55R+X2cobKMtf2ZMbXQ4SdHuDxrM1OWXyH2c4B8JZ3WHS7lAFQIDAQAB"
+privatekey = rsa.newkeys(2048)
+print(publickey, privatekey)
+cipher = rsa.encrypt('Hello World!'.encode('utf8'), publickey)
+print(cipher)
+secret = rsa.decrypt(cipher, privatekey)
+print(secret)
+greeting = secret.decode('utf8')
+print(greeting)
+        
