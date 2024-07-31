@@ -1,25 +1,35 @@
+#Start by importing all relevant packages for the secure chat system
 import asyncio
 import logging
+#Because websockets, rsa and flask_socketio are special packages and come from an external server, these require installation
 !pip install websockets
 !pip install rsa
 !pip install flask_socketio
+#Now we need to import the websockets package
 import websockets
+#Now construct a function relevant to a particular path in order to transmit data by means of a single message (protocol)
 async def handler(websocket, path):
   data=await(websocket.recv())
   reply=f"Data received as: data!"
   return reply
+#Establish secure connection between user and server (University of Adelaide port = 13128)
 start_server=websockets.serve(handler, 'localhost', 13128)
 asyncio.get_event_loop().run_until_complete(start_server)
+#Now we need to import the flask_socketio package in order to test hijacking and fix any bugs that might occur
 import flask_socketio
 socket_io = flask_io.SocketIO()
+#Now import request in order to connect to hijacked server and investigate vulnerabilities
 from flask import request
 @socket_io.on('connect', namespace='/ns')
+#Now construct a function relevant to the vulnerable path
 def on_client_connect():
   if request.headers.get('Origin', 'invalid') not in socket_io.server_options.get('cors_allowed_origins', []):
     logging.warning('WebSocket Hijacking detected from domain "%s"' % request.headers.get('Origin', 'invalid'))
     return False
   else:
     return True
+#Now construct another function relevant to the vulnerable path so as to be able to transmit message in order to test for SYN-ACK 
+#and wait for an acknowledgement response from a client ensuring the establishment of a secure connection
 async def test():
   async with websockets.connect('https://github.com/a1897034/myrepo/blob/main/README.md') as websocket:
     await websocket.send("Hello World!")
@@ -28,14 +38,20 @@ async def test():
       reply=await(websocket.recv())
       return reply
 asyncio.get_event_loop().run_until_complete(test())
+#Import rsa package in order to use RSA cryptography via Python
 import rsa
+#Now test RSA Encryption by means of a public key and a private key
 publickey = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu7KxT0kXOAw607u3wRQTi9R9bTtcQ5kd1Xw0UZsAv2tIqIZ4NtUHfYEBHS1WPtw2eyDh1ljGZt9RZ+K0h115VH4CQJBOku3LzDjxsUv59QZlJ/6cq3T5xH25H/KfZY+3yD0ti6XAPN1Ca6ZgrI4au2n1Nbh8RcpnWApYR4d12uAX5OpwF79tuklxfjydgn9P8boK7jwV2dHKK0XQpW8m4iVizx8eNQ9mv3ssjWW27hjFkZ4kBl55bvOP/kVH3JIYLMI9lRnuqcx3NSQu9YCDcHiLi0wh6nJbpXQF55R+X2cobKMtf2ZMbXQ4SdHuDxrM1OWXyH2c4B8JZ3WHS7lAFQIDAQAB"
 privatekey = rsa.newkeys(2048)
+#Print public and private keys
 print(publickey, privatekey)
+#Encrypt the secret message via RSA
 cipher = rsa.encrypt('Hello World!'.encode('utf8'), publickey)
 print(cipher)
+#Decrypt the secret message via RSA
 secret = rsa.decrypt(cipher, privatekey)
 print(secret)
+#Decode the secret message via RSA
 greeting = secret.decode('utf8')
 print(greeting)
         
